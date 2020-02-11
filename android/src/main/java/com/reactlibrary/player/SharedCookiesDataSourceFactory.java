@@ -3,12 +3,14 @@ package com.reactlibrary.player;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-
+import java.util.Map;
+import java.util.HashMap;
 import com.facebook.react.bridge.ReactContext;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
 import okhttp3.Cookie;
 
@@ -23,8 +25,12 @@ public class SharedCookiesDataSourceFactory implements DataSource.Factory {
     if (uri.getScheme() != null && (uri.getScheme().equals("http") || uri.getScheme().equals("https"))) {
       mDataSourceFactory = new DefaultHttpDataSourceFactory(userAgent);
     } else {
-      mDataSourceFactory = DataSourceUtil.getRawDataSourceFactory(reactApplicationContext);
-      //mDataSourceFactory = new DefaultDataSourceFactory(context, userAgent);
+
+      DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+      Map<String, String> requestHeaders = new HashMap<String, String>();
+
+      mDataSourceFactory = DataSourceUtil.getDefaultDataSourceFactory(reactApplicationContext, bandwidthMeter,
+          requestHeaders);
     }
     mReactContext = reactApplicationContext;
     mUri = uri;
@@ -34,7 +40,7 @@ public class SharedCookiesDataSourceFactory implements DataSource.Factory {
   public DataSource createDataSource() {
     DataSource dataSource = mDataSourceFactory.createDataSource();
     if (dataSource instanceof HttpDataSource) {
-      //setDataSourceCookies((HttpDataSource) dataSource, mUri);
+      // setDataSourceCookies((HttpDataSource) dataSource, mUri);
     }
     return dataSource;
   }
@@ -43,4 +49,3 @@ public class SharedCookiesDataSourceFactory implements DataSource.Factory {
     return cookie.name() + "=" + cookie.value() + "; ";
   }
 }
-

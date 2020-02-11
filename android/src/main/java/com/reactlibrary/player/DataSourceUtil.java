@@ -18,7 +18,7 @@ import okhttp3.Cookie;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
 import java.util.Map;
-
+import java.util.HashMap;
 
 public class DataSourceUtil {
 
@@ -51,9 +51,9 @@ public class DataSourceUtil {
         DataSourceUtil.rawDataSourceFactory = factory;
     }
 
-
-    public static DataSource.Factory getDefaultDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        if (defaultDataSourceFactory == null || (requestHeaders != null && !requestHeaders.isEmpty())) {
+    public static DataSource.Factory getDefaultDataSourceFactory(ReactContext context,
+            DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
+        if (defaultDataSourceFactory == null || (requestHeaders != null)) {
             defaultDataSourceFactory = buildDataSourceFactory(context, bandwidthMeter, requestHeaders);
         }
         return defaultDataSourceFactory;
@@ -67,17 +67,20 @@ public class DataSourceUtil {
         return new RawResourceDataSourceFactory(context.getApplicationContext());
     }
 
-    private static DataSource.Factory buildDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
+    private static DataSource.Factory buildDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter,
+            Map<String, String> requestHeaders) {
         return new DefaultDataSourceFactory(context, bandwidthMeter,
                 buildHttpDataSourceFactory(context, bandwidthMeter, requestHeaders));
     }
 
-    private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
+    private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context,
+            DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
         OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
         CookieJarContainer container = (CookieJarContainer) client.cookieJar();
         ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
         container.setCookieJar(new JavaNetCookieJar(handler));
-        OkHttpDataSourceFactory okHttpDataSourceFactory = new OkHttpDataSourceFactory(client, getUserAgent(context), bandwidthMeter);
+        OkHttpDataSourceFactory okHttpDataSourceFactory = new OkHttpDataSourceFactory(client, getUserAgent(context),
+                bandwidthMeter);
 
         if (requestHeaders != null)
             okHttpDataSourceFactory.getDefaultRequestProperties().set(requestHeaders);

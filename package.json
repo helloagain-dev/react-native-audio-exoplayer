@@ -1,7 +1,7 @@
 
 {
-  "name": "react-native-audio-exoplayer",
-  "version": "1.0.2",
+  "name": "react-native-audio-fexoplayer",
+  "version": "1.0.1",
   "description": "React Native module for playing sound clips on Android using Google ExoPlayer",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,6 @@
     "type": "git",
     "url": "git+https://github.com/kyrylenko/react-native-audio-exoplayer.git"
   },
-  "author": "Pavlo Kyrylenko <kirilenko.pavlo@gmail.com> (https://github.com/kyrylenko)",
+  "author": "Lee Brindley <leebrindley@gmail.com> (https://github.com/fendorio)",
   "license": "MIT"
 }
