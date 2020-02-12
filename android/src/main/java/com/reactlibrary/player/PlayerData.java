@@ -103,17 +103,18 @@ public abstract class PlayerData implements AudioEventHandler {
     } else {
       int identifier = context.getResources().getIdentifier(
               uriString,
-              "drawable",
+              "raw",
               context.getPackageName()
       );
+
       if (identifier == 0) {
         identifier = context.getResources().getIdentifier(
                 uriString,
-                "raw",
+                "drawable",
                 context.getPackageName()
         );
       }
-     
+
       if (identifier > 0) {
         Uri srcUri = RawResourceDataSource.buildRawResourceUri(identifier);
         Log.d(TAG, "identifier > 0, srcUri: " + srcUri);
