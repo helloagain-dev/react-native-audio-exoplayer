@@ -16,8 +16,8 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    implementation 'com.google.android.exoplayer:exoplayer:2.7.3'
-    implementation('com.google.android.exoplayer:extension-okhttp:2.7.3') {
+    implementation 'com.google.android.exoplayer:exoplayer:2.18.1'
+    implementation('com.google.android.exoplayer:extension-okhttp:2.18.1') {
         exclude group: 'com.squareup.okhttp3', module: 'okhttp'
     }
 
