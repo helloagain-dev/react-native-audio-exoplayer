@@ -1,6 +1,8 @@
 package com.reactlibrary.player;
 
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Surface;
@@ -139,6 +141,8 @@ public abstract class PlayerData implements AudioEventHandler {
 
   abstract String getImplementationName();
 
+  abstract Looper getExoPlayerLooper();
+
   // Lifecycle
 
   public abstract void load(final ReadableMap status, final LoadCompletionListener loadCompletionListener);
@@ -173,20 +177,41 @@ public abstract class PlayerData implements AudioEventHandler {
     }
   }
 
-  private void progressUpdateLoop() {
-    if (shouldContinueUpdatingProgress()) {
-      mTimer = new Timer();
-      mTimer.schedule(new TimerTask() {
-        @Override
-        public void run() {
-          callStatusUpdateListener();
-          progressUpdateLoop();
+//  private void progressUpdateLoop() {
+//    if (shouldContinueUpdatingProgress()) {
+//      mTimer = new Timer();
+//      mTimer.schedule(new TimerTask() {
+//        @Override
+//        public void run() {
+//          callStatusUpdateListener();
+//          progressUpdateLoop();
+//        }
+//      }, mProgressUpdateIntervalMillis);
+//    } else {
+//      stopUpdatingProgressIfNecessary();
+//    }
+//  }
+
+    private void progressUpdateLoop() {
+        if (shouldContinueUpdatingProgress()) {
+            mTimer = new Timer();
+            mTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    // Post to the main thread to ensure all ExoPlayer interactions happen on the UI thread
+                    new Handler(getExoPlayerLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callStatusUpdateListener();
+                            progressUpdateLoop();
+                        }
+                    });
+                }
+            }, mProgressUpdateIntervalMillis);
+        } else {
+            stopUpdatingProgressIfNecessary();
         }
-      }, mProgressUpdateIntervalMillis);
-    } else {
-      stopUpdatingProgressIfNecessary();
     }
-  }
 
   final void beginUpdatingProgressIfNecessary() {
     if (mTimer == null) {

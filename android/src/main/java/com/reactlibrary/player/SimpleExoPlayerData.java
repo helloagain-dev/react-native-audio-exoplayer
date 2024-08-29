@@ -1,7 +1,10 @@
 package com.reactlibrary.player;
 
+import android.media.MediaDescription;
+import android.media.browse.MediaBrowser;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.view.Surface;
@@ -13,12 +16,12 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.AdaptiveMediaSourceEventListener;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
@@ -46,7 +49,7 @@ import java.io.IOException;
 import com.reactlibrary.AVModule;
 
 class SimpleExoPlayerData extends PlayerData
-    implements Player.EventListener, ExtractorMediaSource.EventListener, AdaptiveMediaSourceEventListener {
+    implements Player.EventListener, ExtractorMediaSource.EventListener {
 
   private static final String IMPLEMENTATION_NAME = "SimpleExoPlayer";
 
@@ -73,7 +76,12 @@ class SimpleExoPlayerData extends PlayerData
     return IMPLEMENTATION_NAME;
   }
 
-  // --------- PlayerData implementation ---------
+    @Override
+    Looper getExoPlayerLooper() {
+        return mSimpleExoPlayer.getApplicationLooper();
+    }
+
+    // --------- PlayerData implementation ---------
 
   // Lifecycle
 
@@ -83,11 +91,10 @@ class SimpleExoPlayerData extends PlayerData
 
     // Create a default TrackSelector
     final Handler mainHandler = new Handler();
-    final TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
-    final TrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
+    final TrackSelector trackSelector = new DefaultTrackSelector(mReactContext);
 
     // Create the player
-    mSimpleExoPlayer = ExoPlayerFactory.newSimpleInstance(mReactContext, trackSelector);
+    mSimpleExoPlayer = new SimpleExoPlayer.Builder(mReactContext).build();
     mSimpleExoPlayer.addListener(this);
 
     // Produces DataSource instances through which media data is loaded.
@@ -96,9 +103,9 @@ class SimpleExoPlayerData extends PlayerData
     try {
       // This is the MediaSource representing the media to be played.
       final MediaSource source = buildMediaSource(mUri, mOverridingExtension, mainHandler, dataSourceFactory);
-
+      mSimpleExoPlayer.setMediaSource(source);
       // Prepare the player with the source.
-      mSimpleExoPlayer.prepare(source);
+      mSimpleExoPlayer.prepare();
       setStatus(status, null);
     } catch (IllegalStateException e) {
       Log.d(TAG, "pak exception when mSimpleExoPlayer.prepare");
@@ -321,51 +328,11 @@ class SimpleExoPlayerData extends PlayerData
     @C.ContentType int type = TextUtils.isEmpty(overrideExtension) ? Util.inferContentType(String.valueOf(uri)) : Util.inferContentType("." + overrideExtension);
 
     switch (type) {
-      case C.TYPE_SS:
-        return new SsMediaSource(uri, factory,
-            new DefaultSsChunkSource.Factory(factory), mainHandler, this);
-      case C.TYPE_DASH:
-        return new DashMediaSource(uri, factory,
-            new DefaultDashChunkSource.Factory(factory), mainHandler, this);
-      case C.TYPE_HLS:
-        return new HlsMediaSource(uri, factory, mainHandler, this);
       case C.TYPE_OTHER://this one is ours 3
         return new ExtractorMediaSource(uri, factory, new DefaultExtractorsFactory(), mainHandler, this);
       default: {
         throw new IllegalStateException("Content of this type is unsupported at the moment. Unsupported type: " + type);
       }
     }
-  }
-
-  // AdaptiveMediaSourceEventListener
-
-  @Override
-  public void onLoadStarted(DataSpec dataSpec, int dataType, int trackType, Format trackFormat, int trackSelectionReason, Object trackSelectionData, long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs) {
-
-  }
-
-  @Override
-  public void onLoadCompleted(DataSpec dataSpec, int dataType, int trackType, Format trackFormat, int trackSelectionReason, Object trackSelectionData, long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs, long bytesLoaded) {
-
-  }
-
-  @Override
-  public void onLoadCanceled(DataSpec dataSpec, int dataType, int trackType, Format trackFormat, int trackSelectionReason, Object trackSelectionData, long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs, long bytesLoaded) {
-
-  }
-
-  @Override
-  public void onLoadError(DataSpec dataSpec, int dataType, int trackType, Format trackFormat, int trackSelectionReason, Object trackSelectionData, long mediaStartTimeMs, long mediaEndTimeMs, long elapsedRealtimeMs, long loadDurationMs, long bytesLoaded, IOException error, boolean wasCanceled) {
-    onLoadError(error);
-  }
-
-  @Override
-  public void onUpstreamDiscarded(int trackType, long mediaStartTimeMs, long mediaEndTimeMs) {
-
-  }
-
-  @Override
-  public void onDownstreamFormatChanged(int trackType, Format trackFormat, int trackSelectionReason, Object trackSelectionData, long mediaTimeMs) {
-
   }
 }
